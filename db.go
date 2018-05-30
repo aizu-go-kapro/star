@@ -35,7 +35,13 @@ type jsonBookmarkRepository struct {
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	panic("not implemented")
+	for i, elme := range j.bookmarks {
+		if elem.Name == b.Name {
+			return fmt.Errorf("Alrady exist bookmark name")
+		}
+	}
+	j.bookmarks = append(j.bookmarks, b)
+	return nil
 }
 
 func (j *jsonBookmarkRepository) List(context.Context) ([]*Bookmark, error) {
