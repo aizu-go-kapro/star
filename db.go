@@ -34,7 +34,7 @@ type jsonBookmarkRepository struct {
 	bookmarks []*Bookmark
 }
 
-func (j *jsonBookmarkRepository) Add(context.Context, *Bookmark) error {
+func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 	panic("not implemented")
 }
 
