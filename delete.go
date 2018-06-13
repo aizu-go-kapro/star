@@ -6,7 +6,7 @@ type DeleteCommand struct {
 }
 
 func (d *DeleteCommand) Help() string {
-	panic("not implemented")
+	return "Usage: star delete <name>"
 }
 
 func (d *DeleteCommand) Run(args []string) int {
@@ -14,7 +14,7 @@ func (d *DeleteCommand) Run(args []string) int {
 }
 
 func (d *DeleteCommand) Synopsis() string {
-	panic("not implemented")
+	return "delete a bookmark"
 }
 
 func newDeleteCommand() (cli.Command, error) {

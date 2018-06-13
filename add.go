@@ -6,7 +6,7 @@ type AddCommand struct {
 }
 
 func (a *AddCommand) Help() string {
-	panic("not implemented")
+	return "Usage: star add <url> <name>"
 }
 
 func (a *AddCommand) Run(args []string) int {
@@ -14,7 +14,7 @@ func (a *AddCommand) Run(args []string) int {
 }
 
 func (a *AddCommand) Synopsis() string {
-	panic("not implemented")
+	return "add a bookmark"
 }
 
 func newAddCommand() (cli.Command, error) {
