@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 
@@ -35,8 +36,8 @@ type jsonBookmarkRepository struct {
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	for i, elme := range j.bookmarks {
-		if elem.Name == b.Name {
+	for _, e := range j.bookmarks {
+		if e.Name == b.Name {
 			return fmt.Errorf("Alrady exist bookmark name")
 		}
 	}
