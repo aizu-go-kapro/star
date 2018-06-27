@@ -5,7 +5,7 @@ import "github.com/mitchellh/cli"
 type UpdateCommand struct{}
 
 func (u *UpdateCommand) Help() string {
-	panic("not implemented")
+	return "Usage: star update <url> <name>"
 }
 
 func (u *UpdateCommand) Run(args []string) int {
@@ -13,7 +13,7 @@ func (u *UpdateCommand) Run(args []string) int {
 }
 
 func (u *UpdateCommand) Synopsis() string {
-	panic("not implemented")
+	return "update a bookmark"
 }
 
 func newUpdateCommand() (cli.Command, error) {

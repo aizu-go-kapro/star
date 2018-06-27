@@ -6,7 +6,7 @@ type OpenCommand struct {
 }
 
 func (o *OpenCommand) Help() string {
-	panic("not implemented")
+	return "Usage: star open <name>"
 }
 
 func (o *OpenCommand) Run(args []string) int {
@@ -14,7 +14,7 @@ func (o *OpenCommand) Run(args []string) int {
 }
 
 func (o *OpenCommand) Synopsis() string {
-	panic("not implemented")
+	return "open the url of a bookmark you selected"
 }
 
 func newOpenCommand() (cli.Command, error) {
