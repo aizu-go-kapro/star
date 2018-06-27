@@ -5,7 +5,7 @@ import "github.com/mitchellh/cli"
 type ListCommand struct{}
 
 func (l *ListCommand) Help() string {
-	panic("not implemented")
+	return "Usage: star list"
 }
 
 func (l *ListCommand) Run(args []string) int {
@@ -13,7 +13,7 @@ func (l *ListCommand) Run(args []string) int {
 }
 
 func (l *ListCommand) Synopsis() string {
-	panic("not implemented")
+	return "list ups all bookmarks"
 }
 
 func newListCommand() (cli.Command, error) {
