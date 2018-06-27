@@ -35,6 +35,7 @@ type jsonBookmarkRepository struct {
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
+	// by tenntenn 重複管理はmap使ったほうがよいのでは？
 	for _, e := range j.bookmarks {
 		if e.Name == b.Name {
 			return errors.New("Alrady exist bookmark name")
@@ -60,6 +61,8 @@ func NewRepository() (*Repository, error) {
 	return newJSONRepository()
 }
 
+// by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
+// テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {
 	f, err := os.Open("in.json")
 	if err != nil {

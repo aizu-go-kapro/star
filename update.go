@@ -4,6 +4,8 @@ import "github.com/mitchellh/cli"
 
 type UpdateCommand struct{}
 
+// by tenntenn empty structなら func (Updatecommand) Help() string でも良さそう。
+// 今後フィールドが増えるなら話は別。
 func (u *UpdateCommand) Help() string {
 	return "Usage: star update <url> <name>"
 }
