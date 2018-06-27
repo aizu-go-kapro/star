@@ -68,13 +68,24 @@ func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
 	if err != nil {
 		return err
 	}
-	j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
+	switch {
+	case n == 0 && len(j.bookmarks) == 1:
+		j.bookmarks = []*Bookmark{}
+	case n == 0:
+		j.bookmarks = j.bookmarks[n+1:]
+	case n == len(j.bookmarks)-1:
+		j.bookmarks = j.bookmarks[:n]
+	default:
+		j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
+	}
 	return nil
 }
 
 func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
 	for i := range j.bookmarks {
-		return i, nil
+		if b.Name == j.bookmarks[i].Name {
+			return i, nil
+		}
 	}
 	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
 }
