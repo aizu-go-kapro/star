@@ -4,19 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
+var once sync.Once
 var repo *Repository
 
 func Init() {
-	var err error
-	repo, err = NewRepository()
-	if err != nil {
-		panic(err)
-	}
+	once.Do(func() {
+		var err error
+		repo, err = NewRepository()
+		if err != nil {
+			panic(err)
+		}
+	})
 }
 
 type DB struct {
