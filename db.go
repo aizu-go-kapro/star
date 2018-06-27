@@ -9,6 +9,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+var repo *Repository
+
+func init() {
+	var err error
+	repo, err = NewRepository()
+	if err != nil {
+		panic(err)
+	}
+}
+
 type DB struct {
 	Bookmarks []*Bookmark `json:"bookmarks"`
 }
@@ -38,16 +48,28 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 	panic("not implemented")
 }
 
-func (j *jsonBookmarkRepository) List(context.Context) ([]*Bookmark, error) {
+func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
 	panic("not implemented")
 }
 
-func (j *jsonBookmarkRepository) Update(context.Context, *Bookmark) error {
+func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 	panic("not implemented")
 }
 
-func (j *jsonBookmarkRepository) Delete(context.Context, *Bookmark) error {
-	panic("not implemented")
+func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
+	n, err := j.findBookmark(b)
+	if err != nil {
+		return err
+	}
+	j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
+	return nil
+}
+
+func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
+	for i := range j.bookmarks {
+		return i, nil
+	}
+	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
 }
 
 func NewRepository() (*Repository, error) {
