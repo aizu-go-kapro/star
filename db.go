@@ -11,7 +11,7 @@ import (
 
 var repo *Repository
 
-func init() {
+func Init() {
 	var err error
 	repo, err = NewRepository()
 	if err != nil {

@@ -8,8 +8,7 @@ import (
 
 var _ BookmarkRepository = (*jsonBookmarkRepository)(nil)
 
-func TestJSONBookmark_Add(t *testing.T) {}
-func TestJSONBookmark_List(t *testing.T) {
+func TestJSONBookmark(t *testing.T) {
 	b := &Bookmark{Name: "bookmark", URL: "http://example.com", CreatedAt: time.Now()}
 	repo := &jsonBookmarkRepository{}
 
@@ -24,12 +23,36 @@ func TestJSONBookmark_List(t *testing.T) {
 		}
 	}
 
-	assertLen(t, 0)
+	t.Run("Add adds a bookmark to the repository", func(t *testing.T) {
+		assertLen(t, 0)
 
-	err := repo.Add(context.TODO(), b)
-	if err != nil {
-		t.Fatalf("expected nil, but got error: %s", err)
-	}
+		err := repo.Add(context.TODO(), b)
+		if err != nil {
+			t.Errorf("expected nil, but got error: %s", err)
+		}
 
-	assertLen(t, 1)
+		assertLen(t, 1)
+	})
+
+	// t.Run("List lists all bookmarks", func(t *testing.T) {
+	// 	bookmarks, err := repo.List(context.Background())
+	// 	if err != nil {
+	// 		t.Fatalf("expected no errors, but got an error: %s", err)
+	// 	}
+	//
+	// 	if len(bookmarks) != 1 {
+	// 		t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
+	// 	}
+	// })
+
+	t.Run("List lists all bookmarks", func(t *testing.T) {
+		bookmarks, err := repo.List(context.Background())
+		if err != nil {
+			t.Fatalf("expected no errors, but got an error: %s", err)
+		}
+
+		if len(bookmarks) != 1 {
+			t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
+		}
+	})
 }

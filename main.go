@@ -13,6 +13,8 @@ const (
 )
 
 func main() {
+	Init()
+
 	c := cli.NewCLI(appName, version)
 	c.Args = os.Args[1:]
 	c.Commands = map[string]cli.CommandFactory{
