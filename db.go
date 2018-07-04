@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -31,7 +32,8 @@ type BookmarkRepository interface {
 }
 
 type jsonBookmarkRepository struct {
-	bookmarks []*Bookmark
+	bookmarks   []*Bookmark
+	encountered sync.Map
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
@@ -61,6 +63,7 @@ func NewRepository() (*Repository, error) {
 	return newJSONRepository()
 }
 
+// TODO (@ktr0731)
 // by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
 // テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {

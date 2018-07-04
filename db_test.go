@@ -6,16 +6,13 @@ import (
 	"time"
 )
 
-// by tenntenn たしかにこっちの方がいいね
 var _ BookmarkRepository = (*jsonBookmarkRepository)(nil)
 
 func TestJSONBookmark_Add(t *testing.T) {
-	// by tenntenn var repo jsonbookmarkrepositoryでいい
-	repo := jsonBookmarkRepository{}
+	var repo jsonBookmarkRepository
 	bookmark := &Bookmark{"hoge", "https://hoge.example.com", time.Now()}
 
-	// by tenntenn context.TODOだと修正する前提だけどいいのかな？
-	if err := repo.Add(context.TODO(), bookmark); err != nil {
+	if err := repo.Add(context.Background(), bookmark); err != nil {
 		t.Fatal(err)
 	}
 	if len(repo.bookmarks) != 1 {
