@@ -27,6 +27,13 @@ func TestJSONBookmark(t *testing.T) {
 		}
 	}
 
+	// listbookmarks := func(t *testing.T) {
+	// 	_, err := repo.List(context.TODO())
+	// 	if err != nil {
+	// 		t.Errorf("expected nil, but got error: %s", err)
+	// 	}
+	// }
+
 	t.Run("Add adds a bookmark to the repository", func(t *testing.T) {
 		assertBookmarkLen(t, 0)
 
@@ -35,16 +42,16 @@ func TestJSONBookmark(t *testing.T) {
 		assertBookmarkLen(t, 1)
 	})
 
-	// t.Run("List lists all bookmarks", func(t *testing.T) {
-	// 	bookmarks, err := repo.List(context.Background())
-	// 	if err != nil {
-	// 		t.Fatalf("expected no errors, but got an error: %s", err)
-	// 	}
-	//
-	// 	if len(bookmarks) != 1 {
-	// 		t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
-	// 	}
-	// })
+	t.Run("List lists all bookmarks", func(t *testing.T) {
+		bookmarks, err := repo.List(context.Background())
+		if err != nil {
+			t.Fatalf("expected no errors, but got an error: %s", err)
+		}
+
+		if len(bookmarks) != 1 {
+			t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
+		}
+	})
 
 	t.Run("Delete deletes one bookmark from passed key (name)", func(t *testing.T) {
 		t.Run("delete one bookmark from the repository which has only one bookmark", func(t *testing.T) {
@@ -77,4 +84,16 @@ func TestJSONBookmark(t *testing.T) {
 			}
 		})
 	})
+}
+
+func TestJSONBookmark_List(t *testing.T) {
+	b := &Bookmark{Name: "bookmark", URL: "http://example.com", CreatedAt: time.Now()}
+	repo := &jsonBookmarkRepository{}
+	ctx := context.Background()
+	repo.Add(ctx, b)
+	repo.List(ctx)
+	_, err := repo.List(ctx)
+	if err != nil {
+		t.Fatalf("can not return Bookmarks")
+	}
 }
