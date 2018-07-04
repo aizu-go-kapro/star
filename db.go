@@ -59,7 +59,7 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
-	panic("not implemented")
+	return j.bookmarks, nil
 }
 
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
