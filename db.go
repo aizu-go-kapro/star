@@ -55,7 +55,7 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 		}
 	}
 	j.bookmarks = append(j.bookmarks, b)
-	return nil
+	return j.save(ctx)
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
@@ -66,7 +66,7 @@ func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 	panic("not implemented")
 }
 
-func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
+func (j *jsonBookmarkRepository) Delete(ctx context.Context, b *Bookmark) error {
 	n, err := j.findBookmark(b)
 	if err != nil {
 		return err
@@ -80,6 +80,22 @@ func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
 		j.bookmarks = j.bookmarks[:n]
 	default:
 		j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
+	}
+	return j.save(ctx)
+}
+
+func (j *jsonBookmarkRepository) save(_ context.Context) error {
+	// TODO: backup
+	f, err := os.Create("in.json")
+	if err != nil {
+		return errors.Wrap(err, "failed to re-open JSON database")
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(&DB{Bookmarks: j.bookmarks}); err != nil {
+		return errors.Wrap(err, "failed to encode JSON database")
 	}
 	return nil
 }
