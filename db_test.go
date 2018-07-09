@@ -27,13 +27,6 @@ func TestJSONBookmark(t *testing.T) {
 		}
 	}
 
-	// listbookmarks := func(t *testing.T) {
-	// 	_, err := repo.List(context.TODO())
-	// 	if err != nil {
-	// 		t.Errorf("expected nil, but got error: %s", err)
-	// 	}
-	// }
-
 	t.Run("Add adds a bookmark to the repository", func(t *testing.T) {
 		assertBookmarkLen(t, 0)
 
@@ -84,16 +77,4 @@ func TestJSONBookmark(t *testing.T) {
 			}
 		})
 	})
-}
-
-func TestJSONBookmark_List(t *testing.T) {
-	b := &Bookmark{Name: "bookmark", URL: "http://example.com", CreatedAt: time.Now()}
-	repo := &jsonBookmarkRepository{}
-	ctx := context.Background()
-	repo.Add(ctx, b)
-	repo.List(ctx)
-	_, err := repo.List(ctx)
-	if err != nil {
-		t.Fatalf("can not return Bookmarks")
-	}
 }
