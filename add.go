@@ -26,7 +26,7 @@ func (a *AddCommand) Run(args []string) int {
 		a.ui.Println(err)
 	}
 
-	bookmark := &Bookmark{Name: args[0], URL: args[1], CreatedAt: time.Now()}
+	bookmark := &Bookmark{Name: args[1], URL: args[0], CreatedAt: time.Now()}
 	if err := repo.Bookmark.Add(context.Background(), bookmark); err != nil {
 		a.ui.Println(err)
 		return 1
