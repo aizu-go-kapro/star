@@ -3,6 +3,7 @@ package main
 import "github.com/mitchellh/cli"
 
 type DeleteCommand struct {
+	ui UI
 }
 
 func (d *DeleteCommand) Help() string {
@@ -18,5 +19,5 @@ func (d *DeleteCommand) Synopsis() string {
 }
 
 func newDeleteCommand() (cli.Command, error) {
-	return &DeleteCommand{}, nil
+	return &DeleteCommand{ui: ui}, nil
 }

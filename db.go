@@ -4,22 +4,47 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/zchee/go-xdgbasedir"
 )
 
-var once sync.Once
-var repo *Repository
+var (
+	once sync.Once
+	repo *Repository
+)
 
-func Init() {
+var (
+	defaultDBPath = filepath.Join(xdgbasedir.ConfigHome(), "star", "db.json")
+	dbPath        string
+)
+
+func InitDB(dbPathArg string) {
 	once.Do(func() {
 		var err error
 		repo, err = NewRepository()
 		if err != nil {
 			panic(err)
 		}
+
+		switch {
+		case dbPathArg != "":
+			dbPath = dbPathArg
+		case os.Getenv("STAR_JSON_DB_PATH") != "":
+			dbPath = os.Getenv("STAR_JSON_DB_PATH")
+		default:
+			dbPath = defaultDBPath
+		}
+
+		if _, err := os.Stat(filepath.Dir(dbPath)); os.IsNotExist(err) {
+			if err := os.MkdirAll(filepath.Dir(defaultDBPath), 0755); err != nil {
+				panic(err)
+			}
+		}
+
 	})
 }
 
@@ -86,7 +111,7 @@ func (j *jsonBookmarkRepository) Delete(ctx context.Context, b *Bookmark) error 
 
 func (j *jsonBookmarkRepository) save(_ context.Context) error {
 	// TODO: backup
-	f, err := os.Create("in.json")
+	f, err := os.Create(dbPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to re-open JSON database")
 	}
@@ -114,7 +139,17 @@ func NewRepository() (*Repository, error) {
 }
 
 func newJSONRepository() (*Repository, error) {
-	f, err := os.Open("in.json")
+	_, err := os.Stat(dbPath)
+	if os.IsNotExist(err) {
+		return &Repository{
+			Bookmark: &jsonBookmarkRepository{bookmarks: []*Bookmark{}},
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(dbPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load JSON database")
 	}
