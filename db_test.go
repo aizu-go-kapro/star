@@ -35,16 +35,16 @@ func TestJSONBookmark(t *testing.T) {
 		assertBookmarkLen(t, 1)
 	})
 
-	// t.Run("List lists all bookmarks", func(t *testing.T) {
-	// 	bookmarks, err := repo.List(context.Background())
-	// 	if err != nil {
-	// 		t.Fatalf("expected no errors, but got an error: %s", err)
-	// 	}
-	//
-	// 	if len(bookmarks) != 1 {
-	// 		t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
-	// 	}
-	// })
+	t.Run("List lists all bookmarks", func(t *testing.T) {
+		bookmarks, err := repo.List(context.Background())
+		if err != nil {
+			t.Fatalf("expected no errors, but got an error: %s", err)
+		}
+
+		if len(bookmarks) != 1 {
+			t.Errorf("expected one bookmark, but got %d bookmarks", len(bookmarks))
+		}
+	})
 
 	t.Run("Delete deletes one bookmark from passed key (name)", func(t *testing.T) {
 		t.Run("delete one bookmark from the repository which has only one bookmark", func(t *testing.T) {
