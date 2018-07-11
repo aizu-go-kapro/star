@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -63,7 +64,13 @@ func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
 }
 
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
-	panic("not implemented")
+	for i, bookmark := range j.bookmarks {
+		if bookmark.Name == b.Name {
+			j.bookmarks[i] = b
+			return nil
+		}
+	}
+	return fmt.Errorf("Not found %s", b.Name)
 }
 
 func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
