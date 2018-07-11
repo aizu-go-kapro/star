@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 )
 
 type AddCommand struct {
+	ui UI
 }
 
 func (a *AddCommand) Help() string {
@@ -18,18 +18,17 @@ func (a *AddCommand) Help() string {
 
 func (a *AddCommand) Run(args []string) int {
 	if len(args) != 2 {
-		fmt.Println(a.Help())
+		a.ui.Println(a.Help())
 		return 1
 	}
 
-	if _, err := url.ParseRequestURI(args[0]); err != nil {
-		fmt.Println(err)
-		return 1
+	if _, err := url.ParseRequestURI(args[1]); err != nil {
+		a.ui.Println(err)
 	}
 
 	bookmark := &Bookmark{Name: args[1], URL: args[0], CreatedAt: time.Now()}
 	if err := repo.Bookmark.Add(context.Background(), bookmark); err != nil {
-		fmt.Println(err)
+		a.ui.Println(err)
 		return 1
 	}
 
@@ -41,5 +40,5 @@ func (a *AddCommand) Synopsis() string {
 }
 
 func newAddCommand() (cli.Command, error) {
-	return &AddCommand{}, nil
+	return &AddCommand{ui: ui}, nil
 }

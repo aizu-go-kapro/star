@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"os"
 
 	"github.com/mitchellh/cli"
@@ -13,7 +13,14 @@ const (
 )
 
 func main() {
-	Init()
+	var (
+		dbPath string
+	)
+	flag.StringVar(&dbPath, "path", "", "JSON database path")
+	flag.Parse()
+
+	InitDB(dbPath)
+	InitUI(nil)
 
 	c := cli.NewCLI(appName, version)
 	c.Args = os.Args[1:]
@@ -26,7 +33,7 @@ func main() {
 	}
 	exitStatus, err := c.Run()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		ui.ErrPrintln(err)
 	}
 	os.Exit(exitStatus)
 }
