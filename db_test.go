@@ -26,11 +26,7 @@ func TestJSONBookmark(t *testing.T) {
 			}
 		}
 	}
-	assertBookmarkContext := func(t *testing.T, expected *Bookmark) {
-		if repo.bookmarks[len(repo.bookmarks)-1] != expected {
-			t.Errorf("expected %s, but got %s", expected.Name, repo.bookmarks[len(repo.bookmarks)-1].Name)
-		}
-	}
+
 	updateBookmark := func(t *testing.T, b ...*Bookmark) {
 		for _, bookmark := range b {
 			err := repo.Update(context.TODO(), bookmark)
