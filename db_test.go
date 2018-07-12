@@ -39,6 +39,11 @@ func TestJSONBookmark(t *testing.T) {
 	})
 
 	t.Run("List lists all bookmarks", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+		assertBookmarkLen(t, 1)
+
 		bookmarks, err := repo.List(context.Background())
 		if err != nil {
 			t.Fatalf("expected no errors, but got an error: %s", err)
