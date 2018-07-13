@@ -50,12 +50,23 @@ type jsonBookmarkRepository struct {
 	encountered sync.Map
 }
 
-func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	// by tenntenn 重複管理はmap使ったほうがよいのでは？
-	for _, e := range j.bookmarks {
-		if e.Name == b.Name {
-			return errors.New("Already exist bookmark name")
+func newJSONBookmarkRepository(db *DB) *jsonBookmarkRepository {
+	var m sync.Map
+	for _, b := range db.Bookmarks {
+		_, ok := m.LoadOrStore(b.Name, b)
+		if ok {
+			panic(fmt.Sprintf("duplicated key found in the JSON DB: %s", b.Name))
 		}
+	}
+	return &jsonBookmarkRepository{
+		bookmarks:   db.Bookmarks,
+		encountered: m,
+	}
+}
+
+func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
+	if _, err := j.findBookmark(b); !notFoundBookmark(err) {
+		return errors.New("Already exist bookmark name")
 	}
 	j.bookmarks = append(j.bookmarks, b)
 	return nil
@@ -99,7 +110,13 @@ func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
 			return i, nil
 		}
 	}
-	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
+	return 0, errors.Wrap(errNotFoundBookmark, b.Name)
+}
+
+var errNotFoundBookmark = errors.New("no such named bookmark")
+
+func notFoundBookmark(err error) bool {
+	return errors.Cause(err) == errNotFoundBookmark
 }
 
 func NewRepository() (*Repository, error) {
@@ -122,6 +139,6 @@ func newJSONRepository() (*Repository, error) {
 	}
 
 	return &Repository{
-		Bookmark: &jsonBookmarkRepository{bookmarks: db.Bookmarks},
+		Bookmark: newJSONBookmarkRepository(&db),
 	}, nil
 }

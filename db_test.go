@@ -38,6 +38,17 @@ func TestJSONBookmark(t *testing.T) {
 		assertBookmarkLen(t, 1)
 	})
 
+	t.Run("Add cannot add values that have duplicated key", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+		assertBookmarkLen(t, 1)
+		err := repo.Add(context.Background(), b)
+		if err == nil {
+			t.Error("expected an error, but got nil")
+		}
+	})
+
 	t.Run("List lists all bookmarks", func(t *testing.T) {
 		defer cleanup(t)
 
