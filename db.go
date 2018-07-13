@@ -78,7 +78,7 @@ func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
 	if !ok {
-		return errors.Wrap(errNotFoundBookmark, "failed to find the bookmark specified by passed key")
+		return errors.New("failed to find the bookmark specified by passed key")
 	}
 	return nil
 }
@@ -86,7 +86,7 @@ func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
 	_, ok := j.bookmarks.Load(b.Name)
 	if !ok {
-		return errors.Wrap(errNotFoundBookmark, "failed to find the bookmark specified by passed key")
+		return errors.New("failed to find the bookmark specified by passed key")
 	}
 	j.bookmarks.Delete(b.Name)
 	return nil
@@ -102,12 +102,6 @@ func (j *jsonBookmarkRepository) slice() []*Bookmark {
 		return b[i].Name < b[j].Name
 	})
 	return b
-}
-
-var errNotFoundBookmark = errors.New("no such named bookmark")
-
-func notFoundBookmark(err error) bool {
-	return errors.Cause(err) == errNotFoundBookmark
 }
 
 func NewRepository() (*Repository, error) {
