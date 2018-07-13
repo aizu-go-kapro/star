@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 
@@ -70,43 +72,40 @@ type BookmarkRepository interface {
 }
 
 type jsonBookmarkRepository struct {
-	bookmarks []*Bookmark
+	bookmarks sync.Map
+}
+
+func newJSONBookmarkRepository(db *DB) *jsonBookmarkRepository {
+	var m sync.Map
+	for _, b := range db.Bookmarks {
+		_, ok := m.LoadOrStore(b.Name, b)
+		if ok {
+			panic(fmt.Sprintf("duplicated key found in the JSON DB: %s", b.Name))
+		}
+	}
+	return &jsonBookmarkRepository{
+		bookmarks: m,
+	}
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	for _, e := range j.bookmarks {
-		if e.Name == b.Name {
-			return errors.New("Alrady exist bookmark name")
-		}
+	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
+	if ok {
+		return errors.New("Already exist bookmark name")
 	}
-	j.bookmarks = append(j.bookmarks, b)
-	return j.save(ctx)
+	return nil
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
-	panic("not implemented")
+	return j.slice(), nil
 }
 
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
-	panic("not implemented")
-}
-
-func (j *jsonBookmarkRepository) Delete(ctx context.Context, b *Bookmark) error {
-	n, err := j.findBookmark(b)
-	if err != nil {
-		return err
+	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
+	if !ok {
+		return errors.New("failed to find the bookmark specified by passed key")
 	}
-	switch {
-	case n == 0 && len(j.bookmarks) == 1:
-		j.bookmarks = []*Bookmark{}
-	case n == 0:
-		j.bookmarks = j.bookmarks[n+1:]
-	case n == len(j.bookmarks)-1:
-		j.bookmarks = j.bookmarks[:n]
-	default:
-		j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
-	}
-	return j.save(ctx)
+	return nil
 }
 
 func (j *jsonBookmarkRepository) save(_ context.Context) error {
@@ -119,30 +118,45 @@ func (j *jsonBookmarkRepository) save(_ context.Context) error {
 
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(&DB{Bookmarks: j.bookmarks}); err != nil {
+	if err := enc.Encode(&DB{Bookmarks: j.slice()}); err != nil {
 		return errors.Wrap(err, "failed to encode JSON database")
 	}
 	return nil
 }
 
-func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
-	for i := range j.bookmarks {
-		if b.Name == j.bookmarks[i].Name {
-			return i, nil
-		}
+func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
+	_, ok := j.bookmarks.Load(b.Name)
+	if !ok {
+		return errors.New("failed to find the bookmark specified by passed key")
 	}
-	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
+	j.bookmarks.Delete(b.Name)
+	return nil
+}
+
+func (j *jsonBookmarkRepository) slice() []*Bookmark {
+	var b []*Bookmark
+	j.bookmarks.Range(func(k, v interface{}) bool {
+		b = append(b, v.(*Bookmark))
+		return true
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Name < b[j].Name
+	})
+	return b
 }
 
 func NewRepository() (*Repository, error) {
 	return newJSONRepository()
 }
 
+// TODO (@ktr0731)
+// by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
+// テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {
 	_, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
 		return &Repository{
-			Bookmark: &jsonBookmarkRepository{bookmarks: []*Bookmark{}},
+			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
 		}, nil
 	}
 	if err != nil {
@@ -161,6 +175,6 @@ func newJSONRepository() (*Repository, error) {
 	}
 
 	return &Repository{
-		Bookmark: &jsonBookmarkRepository{bookmarks: db.Bookmarks},
+		Bookmark: newJSONBookmarkRepository(&db),
 	}, nil
 }

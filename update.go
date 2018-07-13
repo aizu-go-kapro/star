@@ -6,7 +6,7 @@ type UpdateCommand struct {
 	ui UI
 }
 
-func (u *UpdateCommand) Help() string {
+func (*UpdateCommand) Help() string {
 	return "Usage: star update <url> <name>"
 }
 
@@ -14,7 +14,7 @@ func (u *UpdateCommand) Run(args []string) int {
 	panic("not implemented")
 }
 
-func (u *UpdateCommand) Synopsis() string {
+func (*UpdateCommand) Synopsis() string {
 	return "update a bookmark"
 }
 
