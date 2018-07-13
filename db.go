@@ -46,14 +46,27 @@ type BookmarkRepository interface {
 }
 
 type jsonBookmarkRepository struct {
-	bookmarks []*Bookmark
+	bookmarks   []*Bookmark
+	encountered sync.Map
+}
+
+func newJSONBookmarkRepository(db *DB) *jsonBookmarkRepository {
+	var m sync.Map
+	for _, b := range db.Bookmarks {
+		_, ok := m.LoadOrStore(b.Name, b)
+		if ok {
+			panic(fmt.Sprintf("duplicated key found in the JSON DB: %s", b.Name))
+		}
+	}
+	return &jsonBookmarkRepository{
+		bookmarks:   db.Bookmarks,
+		encountered: m,
+	}
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	for _, e := range j.bookmarks {
-		if e.Name == b.Name {
-			return errors.New("Already exist bookmark name")
-		}
+	if _, err := j.findBookmark(b); !notFoundBookmark(err) {
+		return errors.New("Already exist bookmark name")
 	}
 	j.bookmarks = append(j.bookmarks, b)
 	return nil
@@ -97,13 +110,22 @@ func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
 			return i, nil
 		}
 	}
-	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
+	return 0, errors.Wrap(errNotFoundBookmark, b.Name)
+}
+
+var errNotFoundBookmark = errors.New("no such named bookmark")
+
+func notFoundBookmark(err error) bool {
+	return errors.Cause(err) == errNotFoundBookmark
 }
 
 func NewRepository() (*Repository, error) {
 	return newJSONRepository()
 }
 
+// TODO (@ktr0731)
+// by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
+// テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {
 	f, err := os.Open("in.json")
 	if err != nil {
@@ -117,6 +139,6 @@ func newJSONRepository() (*Repository, error) {
 	}
 
 	return &Repository{
-		Bookmark: &jsonBookmarkRepository{bookmarks: db.Bookmarks},
+		Bookmark: newJSONBookmarkRepository(&db),
 	}, nil
 }
