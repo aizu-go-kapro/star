@@ -3,12 +3,26 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 )
+
+var once sync.Once
+var repo *Repository
+
+func Init() {
+	once.Do(func() {
+		var err error
+		repo, err = NewRepository()
+		if err != nil {
+			panic(err)
+		}
+	})
+}
 
 type DB struct {
 	Bookmarks []*Bookmark `json:"bookmarks"`
@@ -40,23 +54,52 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 	// by tenntenn 重複管理はmap使ったほうがよいのでは？
 	for _, e := range j.bookmarks {
 		if e.Name == b.Name {
-			return errors.New("Alrady exist bookmark name")
+			return errors.New("Already exist bookmark name")
 		}
 	}
 	j.bookmarks = append(j.bookmarks, b)
 	return nil
 }
 
-func (j *jsonBookmarkRepository) List(context.Context) ([]*Bookmark, error) {
-	panic("not implemented")
+func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
+	return j.bookmarks, nil
 }
 
-func (j *jsonBookmarkRepository) Update(context.Context, *Bookmark) error {
-	panic("not implemented")
+func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
+	for i, bookmark := range j.bookmarks {
+		if bookmark.Name == b.Name {
+			j.bookmarks[i] = b
+			return nil
+		}
+	}
+	return fmt.Errorf("Not found %s", b.Name)
 }
 
-func (j *jsonBookmarkRepository) Delete(context.Context, *Bookmark) error {
-	panic("not implemented")
+func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
+	n, err := j.findBookmark(b)
+	if err != nil {
+		return err
+	}
+	switch {
+	case n == 0 && len(j.bookmarks) == 1:
+		j.bookmarks = []*Bookmark{}
+	case n == 0:
+		j.bookmarks = j.bookmarks[n+1:]
+	case n == len(j.bookmarks)-1:
+		j.bookmarks = j.bookmarks[:n]
+	default:
+		j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
+	}
+	return nil
+}
+
+func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
+	for i := range j.bookmarks {
+		if b.Name == j.bookmarks[i].Name {
+			return i, nil
+		}
+	}
+	return 0, errors.Errorf("no such named bookmark: %s", b.Name)
 }
 
 func NewRepository() (*Repository, error) {
