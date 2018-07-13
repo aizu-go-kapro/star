@@ -12,6 +12,10 @@ func TestJSONBookmark(t *testing.T) {
 	b := &Bookmark{Name: "bookmark", URL: "http://example.com", CreatedAt: time.Now()}
 	repo := &jsonBookmarkRepository{}
 
+	cleanup := func(t *testing.T) {
+		repo = &jsonBookmarkRepository{}
+	}
+
 	assertBookmarkLen := func(t *testing.T, expected int) {
 		if len(repo.bookmarks) != expected {
 			t.Errorf("expected number of %d bookmarks, but got %d", expected, len(repo.bookmarks))
@@ -28,14 +32,18 @@ func TestJSONBookmark(t *testing.T) {
 	}
 
 	t.Run("Add adds a bookmark to the repository", func(t *testing.T) {
-		assertBookmarkLen(t, 0)
+		defer cleanup(t)
 
 		addBookmarks(t, b)
-
 		assertBookmarkLen(t, 1)
 	})
 
 	t.Run("List lists all bookmarks", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+		assertBookmarkLen(t, 1)
+
 		bookmarks, err := repo.List(context.Background())
 		if err != nil {
 			t.Fatalf("expected no errors, but got an error: %s", err)
@@ -46,7 +54,41 @@ func TestJSONBookmark(t *testing.T) {
 		}
 	})
 
+	t.Run("Update fails if the value corresponding to passed key is not found", func(t *testing.T) {
+		defer cleanup(t)
+
+		err := repo.Update(context.Background(), b)
+		if err == nil {
+			t.Fatal("expected an error, but got no errors")
+		}
+	})
+
+	t.Run("Update updates one bookmark from passed key (name)", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+		assertBookmarkLen(t, 1)
+
+		b2 := b
+		b.CreatedAt = time.Now()
+		b.URL = "https://updated-example.com"
+
+		err := repo.Update(context.Background(), b2)
+		if err != nil {
+			t.Fatalf("expected no errors, but got an error: %s", err)
+		}
+
+		actual := repo.bookmarks[0]
+		if *b2 != *actual {
+			t.Errorf("expected that Update updates b by b2 (%v), but not equal (%v)", b2, actual)
+		}
+	})
+
 	t.Run("Delete deletes one bookmark from passed key (name)", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+
 		t.Run("delete one bookmark from the repository which has only one bookmark", func(t *testing.T) {
 			err := repo.Delete(context.Background(), b)
 			if err != nil {
