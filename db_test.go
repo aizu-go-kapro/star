@@ -17,8 +17,9 @@ func TestJSONBookmark(t *testing.T) {
 	}
 
 	assertBookmarkLen := func(t *testing.T, expected int) {
-		if len(repo.bookmarks) != expected {
-			t.Errorf("expected number of %d bookmarks, but got %d", expected, len(repo.bookmarks))
+		length := len(repo.slice())
+		if length != expected {
+			t.Errorf("expected number of %d bookmarks, but got %d", expected, length)
 		}
 	}
 
@@ -89,7 +90,7 @@ func TestJSONBookmark(t *testing.T) {
 			t.Fatalf("expected no errors, but got an error: %s", err)
 		}
 
-		actual := repo.bookmarks[0]
+		actual := repo.slice()[0]
 		if *b2 != *actual {
 			t.Errorf("expected that Update updates b by b2 (%v), but not equal (%v)", b2, actual)
 		}
@@ -122,11 +123,12 @@ func TestJSONBookmark(t *testing.T) {
 			}
 
 			assertBookmarkLen(t, 2)
-			if repo.bookmarks[0] != b {
-				t.Errorf("expected %v, but got %v", b, repo.bookmarks[0])
+			s := repo.slice()
+			if s[0] != b {
+				t.Errorf("expected %v, but got %v", b, s[0])
 			}
-			if repo.bookmarks[1] != b3 {
-				t.Errorf("expected %v, but got %v", b3, repo.bookmarks[1])
+			if s[1] != b3 {
+				t.Errorf("expected %v, but got %v", b3, s[1])
 			}
 		})
 	})

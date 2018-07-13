@@ -52,7 +52,7 @@ type jsonBookmarkRepository struct {
 
 func newJSONBookmarkRepository(db *DB) *jsonBookmarkRepository {
 	var m sync.Map
-	for i, b := range db.Bookmarks {
+	for _, b := range db.Bookmarks {
 		_, ok := m.LoadOrStore(b.Name, b)
 		if ok {
 			panic(fmt.Sprintf("duplicated key found in the JSON DB: %s", b.Name))
