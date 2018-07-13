@@ -77,13 +77,12 @@ func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
 }
 
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
-	for i, bookmark := range j.bookmarks {
-		if bookmark.Name == b.Name {
-			j.bookmarks[i] = b
-			return nil
-		}
+	i, err := j.findBookmark(b)
+	if err != nil {
+		return errors.Wrap(err, "failed to find the bookmark specified by passed key")
 	}
-	return fmt.Errorf("Not found %s", b.Name)
+	j.bookmarks[i] = b
+	return nil
 }
 
 func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
