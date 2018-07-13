@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -46,70 +47,61 @@ type BookmarkRepository interface {
 }
 
 type jsonBookmarkRepository struct {
-	bookmarks   []*Bookmark
-	encountered sync.Map
+	bookmarks sync.Map
 }
 
 func newJSONBookmarkRepository(db *DB) *jsonBookmarkRepository {
 	var m sync.Map
-	for _, b := range db.Bookmarks {
+	for i, b := range db.Bookmarks {
 		_, ok := m.LoadOrStore(b.Name, b)
 		if ok {
 			panic(fmt.Sprintf("duplicated key found in the JSON DB: %s", b.Name))
 		}
 	}
 	return &jsonBookmarkRepository{
-		bookmarks:   db.Bookmarks,
-		encountered: m,
+		bookmarks: m,
 	}
 }
 
 func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
-	if _, err := j.findBookmark(b); !notFoundBookmark(err) {
+	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
+	if ok {
 		return errors.New("Already exist bookmark name")
 	}
-	j.bookmarks = append(j.bookmarks, b)
 	return nil
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
-	return j.bookmarks, nil
+	return j.slice(), nil
 }
 
 func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
-	i, err := j.findBookmark(b)
-	if err != nil {
-		return errors.Wrap(err, "failed to find the bookmark specified by passed key")
+	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
+	if !ok {
+		return errors.Wrap(errNotFoundBookmark, "failed to find the bookmark specified by passed key")
 	}
-	j.bookmarks[i] = b
 	return nil
 }
 
 func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
-	n, err := j.findBookmark(b)
-	if err != nil {
-		return err
+	_, ok := j.bookmarks.Load(b.Name)
+	if !ok {
+		return errors.Wrap(errNotFoundBookmark, "failed to find the bookmark specified by passed key")
 	}
-	switch {
-	case n == 0 && len(j.bookmarks) == 1:
-		j.bookmarks = []*Bookmark{}
-	case n == 0:
-		j.bookmarks = j.bookmarks[n+1:]
-	case n == len(j.bookmarks)-1:
-		j.bookmarks = j.bookmarks[:n]
-	default:
-		j.bookmarks = append(j.bookmarks[:n], j.bookmarks[n+1:]...)
-	}
+	j.bookmarks.Delete(b.Name)
 	return nil
 }
 
-func (j *jsonBookmarkRepository) findBookmark(b *Bookmark) (int, error) {
-	for i := range j.bookmarks {
-		if b.Name == j.bookmarks[i].Name {
-			return i, nil
-		}
-	}
-	return 0, errors.Wrap(errNotFoundBookmark, b.Name)
+func (j *jsonBookmarkRepository) slice() []*Bookmark {
+	var b []*Bookmark
+	j.bookmarks.Range(func(k, v interface{}) bool {
+		b = append(b, v.(*Bookmark))
+		return true
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return b[i].Name < b[j].Name
+	})
+	return b
 }
 
 var errNotFoundBookmark = errors.New("no such named bookmark")
