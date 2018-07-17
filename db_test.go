@@ -78,6 +78,22 @@ func TestJSONBookmark(t *testing.T) {
 		}
 	})
 
+	t.Run("Get a bookmark by name", func(t *testing.T) {
+		defer cleanup(t)
+
+		addBookmarks(t, b)
+		assertBookmarkLen(t, 1)
+
+		actual, err := repo.Get(context.Background(), b.Name)
+		if err != nil {
+			t.Fatalf("expected no errors, but got an error: %s", err)
+		}
+
+		if *b != *actual {
+			t.Errorf("expected actual equals to b, but wrong: b = %#v, actual = %#v", b, actual)
+		}
+	})
+
 	t.Run("Update fails if the value corresponding to passed key is not found", func(t *testing.T) {
 		defer cleanup(t)
 
