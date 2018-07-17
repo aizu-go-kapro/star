@@ -43,13 +43,13 @@ func TestAddCommand(t *testing.T) {
 	}{
 		"can add the URL of Google as named 'google'":    {[]string{"https://google.com", "google"}, false},
 		"cannot add the URL of Google as named 'google'": {[]string{"google", "https://google.com"}, true},
+		"shortage of args":                               {[]string{"https://google.com"}, true},
 	}
 
 	for n, c := range cases {
 		t.Run(n, func(t *testing.T) {
 			out, cleanup := setupForCommandTest(t)
 			defer cleanup()
-
 			code := cmd.Run(c.in)
 			if c.hasErr {
 				if code == 0 {
@@ -72,4 +72,21 @@ func TestAddCommand(t *testing.T) {
 			}
 		})
 	}
+
+	// Duplicate URL check
+	b := []string{"https://google.com", "google"}
+	t.Run("cannot add duplication named URL", func(t *testing.T) {
+		_, cleanup := setupForCommandTest(t)
+		defer cleanup()
+
+		code := cmd.Run(b)
+		if code != 0 {
+			t.Error("expected success once adding bookmark, but failed")
+		} else {
+			code := cmd.Run(b)
+			if code == 0 {
+				t.Error("expected failed secound adding bookmark becasue of duplication, but success")
+			}
+		}
+	})
 }
