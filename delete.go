@@ -18,6 +18,11 @@ func (d *DeleteCommand) Help() string {
 }
 
 func (d *DeleteCommand) Run(args []string) int {
+	if len(args) == 0 {
+		d.ui.ErrPrintln(d.Help())
+		return 1
+	}
+
 	var result error
 	for _, name := range args {
 		if err := repo.Bookmark.Delete(context.Background(), &Bookmark{Name: name}); err != nil {
