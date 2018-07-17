@@ -47,6 +47,10 @@ func InitDB(dbPathArg string) {
 			}
 		}
 
+		if verbose {
+			fmt.Fprintf(os.Stderr, "db path: %s\n", dbPath)
+		}
+
 	})
 }
 
@@ -93,7 +97,7 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 	if ok {
 		return errors.New("Already exist bookmark name")
 	}
-	return nil
+	return j.save(ctx)
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {

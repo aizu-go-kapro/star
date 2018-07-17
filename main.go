@@ -12,18 +12,21 @@ const (
 	version = "0.1.0"
 )
 
+var verbose bool
+
 func main() {
 	var (
 		dbPath string
 	)
 	flag.StringVar(&dbPath, "path", "", "JSON database path")
+	flag.BoolVar(&verbose, "V", false, "verbose mode")
 	flag.Parse()
 
 	InitDB(dbPath)
 	InitUI(nil)
 
 	c := cli.NewCLI(appName, version)
-	c.Args = os.Args[1:]
+	c.Args = flag.Args()
 	c.Commands = map[string]cli.CommandFactory{
 		"open":   newOpenCommand,
 		"add":    newAddCommand,
