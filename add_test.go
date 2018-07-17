@@ -51,11 +51,11 @@ func TestAddCommand(t *testing.T) {
 
 			code := cmd.Run(c.in)
 			if c.hasErr {
-				if code != 0 {
+				if code == 0 {
 					t.Errorf("expected normal status code, but got abnormal code: %d", code)
 				}
 			} else {
-				if code == 0 {
+				if code != 0 {
 					t.Error("expected abnormal status code, but got normal code")
 				}
 			}
