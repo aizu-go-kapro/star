@@ -29,9 +29,9 @@ func setupForCommandTest(t *testing.T) (io.Reader, func()) {
 
 func TestAddCommand(t *testing.T) {
 	dummyUI := &baseUI{
-		Writer:    new(bytes.Buffer),
-		ErrWriter: new(bytes.Buffer),
-		Reader:    new(bytes.Buffer),
+		writer:    new(bytes.Buffer),
+		errWriter: new(bytes.Buffer),
+		reader:    new(bytes.Buffer),
 	}
 	cmd := &AddCommand{
 		ui: dummyUI,

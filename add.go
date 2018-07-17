@@ -23,7 +23,7 @@ func (a *AddCommand) Run(args []string) int {
 	}
 
 	if _, err := url.ParseRequestURI(args[0]); err != nil {
-		a.ui.Println(err)
+		a.ui.ErrPrintln(err)
 		return 1
 	}
 
