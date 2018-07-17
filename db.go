@@ -23,10 +23,13 @@ var (
 var (
 	defaultDBPath = filepath.Join(xdgbasedir.ConfigHome(), "star", "db.json")
 	dbPath        string
+	dbInitialized bool
 )
 
 func InitDB(dbPathArg string) {
 	once.Do(func() {
+		dbInitialized = true
+
 		switch {
 		case dbPathArg != "":
 			dbPath = dbPathArg
@@ -150,12 +153,12 @@ func (j *jsonBookmarkRepository) slice() []*Bookmark {
 }
 
 func NewRepository() (*Repository, error) {
+	if !dbInitialized {
+		panic("need to call InitDB before call NewRepository")
+	}
 	return newJSONRepository()
 }
 
-// TODO (@ktr0731)
-// by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
-// テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {
 	_, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
