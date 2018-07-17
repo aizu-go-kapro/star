@@ -22,8 +22,9 @@ func (a *AddCommand) Run(args []string) int {
 		return 1
 	}
 
-	if _, err := url.ParseRequestURI(args[1]); err != nil {
+	if _, err := url.ParseRequestURI(args[0]); err != nil {
 		a.ui.Println(err)
+		return 1
 	}
 
 	bookmark := &Bookmark{Name: args[1], URL: args[0], CreatedAt: time.Now()}
