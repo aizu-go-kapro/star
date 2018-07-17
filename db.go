@@ -131,13 +131,13 @@ func (j *jsonBookmarkRepository) save(_ context.Context) error {
 	return nil
 }
 
-func (j *jsonBookmarkRepository) Delete(_ context.Context, b *Bookmark) error {
+func (j *jsonBookmarkRepository) Delete(ctx context.Context, b *Bookmark) error {
 	_, ok := j.bookmarks.Load(b.Name)
 	if !ok {
 		return errors.New("failed to find the bookmark specified by passed key")
 	}
 	j.bookmarks.Delete(b.Name)
-	return nil
+	return j.save(ctx)
 }
 
 func (j *jsonBookmarkRepository) slice() []*Bookmark {
