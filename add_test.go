@@ -41,7 +41,8 @@ func TestAddCommand(t *testing.T) {
 		in     []string
 		hasErr bool
 	}{
-		"can add the URL of Google as named 'google'": {[]string{"https://google.com", "google"}, false},
+		"can add the URL of Google as named 'google'":    {[]string{"https://google.com", "google"}, false},
+		"cannot add the URL of Google as named 'google'": {[]string{"google", "https://google.com"}, true},
 	}
 
 	for n, c := range cases {
@@ -52,13 +53,15 @@ func TestAddCommand(t *testing.T) {
 			code := cmd.Run(c.in)
 			if c.hasErr {
 				if code == 0 {
-					t.Errorf("expected normal status code, but got abnormal code: %d", code)
-				}
-			} else {
-				if code != 0 {
 					t.Error("expected abnormal status code, but got normal code")
 				}
+				return
+			} else {
+				if code != 0 {
+					t.Errorf("expected normal status code, but got abnormal code: %d", code)
+				}
 			}
+
 			var db DB
 			if err := json.NewDecoder(out).Decode(&db); err != nil {
 				t.Fatalf("failed to decode test result: %s", err)
