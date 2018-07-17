@@ -2,16 +2,28 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
+	"io"
+	"io/ioutil"
 	"testing"
 )
 
-func setupForCommandTest(t *testing.T) func() {
+func setupForCommandTest(t *testing.T) (io.Reader, func()) {
 	old := repo
 	repo = &Repository{
 		Bookmark: &jsonBookmarkRepository{},
 	}
-	return func() {
+
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %s", err)
+	}
+
+	InitDB(f.Name())
+
+	return f, func() {
 		repo = old
+		f.Close()
 	}
 }
 
@@ -34,7 +46,7 @@ func TestAddCommand(t *testing.T) {
 
 	for n, c := range cases {
 		t.Run(n, func(t *testing.T) {
-			cleanup := setupForCommandTest(t)
+			out, cleanup := setupForCommandTest(t)
 			defer cleanup()
 
 			code := cmd.Run(c.in)
@@ -46,6 +58,14 @@ func TestAddCommand(t *testing.T) {
 				if code == 0 {
 					t.Error("expected abnormal status code, but got normal code")
 				}
+			}
+			var db DB
+			if err := json.NewDecoder(out).Decode(&db); err != nil {
+				t.Fatalf("failed to decode test result: %s", err)
+			}
+
+			if len(db.Bookmarks) != 1 {
+				t.Errorf("expected one bookmark is saved, but %d", len(db.Bookmarks))
 			}
 		})
 	}

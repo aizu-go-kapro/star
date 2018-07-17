@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/zchee/go-xdgbasedir"
 )
@@ -116,7 +116,7 @@ func (j *jsonBookmarkRepository) save(_ context.Context) error {
 	// TODO: backup
 	f, err := os.Create(dbPath)
 	if err != nil {
-		return errors.Wrap(err, "failed to re-open JSON database")
+		return errors.Wrapf(err, "failed to re-open JSON database (%s)", dbPath)
 	}
 	defer f.Close()
 
@@ -159,7 +159,6 @@ func NewRepository() (*Repository, error) {
 func newJSONRepository() (*Repository, error) {
 	_, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
-		pp.Println(err, dbPath)
 		return &Repository{
 			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
 		}, nil
@@ -175,7 +174,11 @@ func newJSONRepository() (*Repository, error) {
 	defer f.Close()
 
 	var db DB
-	if err := json.NewDecoder(f).Decode(&db); err != nil {
+	if err := json.NewDecoder(f).Decode(&db); err == io.EOF {
+		return &Repository{
+			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
+		}, nil
+	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to decode JSON database")
 	}
 
