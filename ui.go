@@ -8,9 +8,9 @@ import (
 
 var ui UI
 var defaultUI = &baseUI{
-	Writer:    os.Stdout,
-	ErrWriter: os.Stderr,
-	Reader:    os.Stdin,
+	writer:    os.Stdout,
+	errWriter: os.Stderr,
+	reader:    os.Stdin,
 }
 
 // InitUI initializes the UI to output text.
@@ -26,18 +26,23 @@ func InitUI(u UI) {
 type UI interface {
 	Println(a ...interface{})
 	ErrPrintln(a ...interface{})
+	Writer() io.Writer
 }
 
 type baseUI struct {
-	Writer    io.Writer
-	ErrWriter io.Writer
-	Reader    io.Reader
+	writer    io.Writer
+	errWriter io.Writer
+	reader    io.Reader
 }
 
 func (u *baseUI) Println(a ...interface{}) {
-	fmt.Fprintln(u.Writer, a...)
+	fmt.Fprintln(u.writer, a...)
 }
 
 func (u *baseUI) ErrPrintln(a ...interface{}) {
-	fmt.Fprintln(u.ErrWriter, a...)
+	fmt.Fprintln(u.errWriter, a...)
+}
+
+func (u *baseUI) Writer() io.Writer {
+	return u.writer
 }
