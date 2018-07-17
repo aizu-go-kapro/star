@@ -3,6 +3,7 @@ package main
 import "github.com/mitchellh/cli"
 
 type OpenCommand struct {
+	ui UI
 }
 
 func (o *OpenCommand) Help() string {
@@ -18,5 +19,5 @@ func (o *OpenCommand) Synopsis() string {
 }
 
 func newOpenCommand() (cli.Command, error) {
-	return &OpenCommand{}, nil
+	return &OpenCommand{ui: ui}, nil
 }

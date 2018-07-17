@@ -2,11 +2,23 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 	"time"
 )
 
 var _ BookmarkRepository = (*jsonBookmarkRepository)(nil)
+
+func setupForDBTest(t *testing.T) func() {
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %s", err)
+	}
+	dbPath = f.Name()
+	return func() {
+		f.Close()
+	}
+}
 
 func TestJSONBookmark(t *testing.T) {
 	b := &Bookmark{Name: "bookmark", URL: "http://example.com", CreatedAt: time.Now()}
@@ -102,6 +114,9 @@ func TestJSONBookmark(t *testing.T) {
 		addBookmarks(t, b)
 
 		t.Run("delete one bookmark from the repository which has only one bookmark", func(t *testing.T) {
+			cleanup := setupForDBTest(t)
+			defer cleanup()
+
 			err := repo.Delete(context.Background(), b)
 			if err != nil {
 				t.Fatalf("expected no errors, but got an error: %s", err)
@@ -111,6 +126,9 @@ func TestJSONBookmark(t *testing.T) {
 		})
 
 		t.Run("delete second bookmark from the repository which has tree bookmarks", func(t *testing.T) {
+			cleanup := setupForDBTest(t)
+			defer cleanup()
+
 			b2 := &Bookmark{Name: "bookmark2", URL: "http://foo.com", CreatedAt: time.Now()}
 			b3 := &Bookmark{Name: "bookmark3", URL: "http://bar.com", CreatedAt: time.Now()}
 			addBookmarks(t, b, b2, b3)

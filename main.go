@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"os"
 
 	"github.com/mitchellh/cli"
@@ -12,11 +12,21 @@ const (
 	version = "0.1.0"
 )
 
+var verbose bool
+
 func main() {
-	Init()
+	var (
+		dbPath string
+	)
+	flag.StringVar(&dbPath, "path", "", "JSON database path")
+	flag.BoolVar(&verbose, "V", false, "verbose mode")
+	flag.Parse()
+
+	InitDB(dbPath)
+	InitUI(nil)
 
 	c := cli.NewCLI(appName, version)
-	c.Args = os.Args[1:]
+	c.Args = flag.Args()
 	c.Commands = map[string]cli.CommandFactory{
 		"open":   newOpenCommand,
 		"add":    newAddCommand,
@@ -26,7 +36,7 @@ func main() {
 	}
 	exitStatus, err := c.Run()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		ui.ErrPrintln(err)
 	}
 	os.Exit(exitStatus)
 }

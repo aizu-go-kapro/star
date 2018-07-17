@@ -2,7 +2,9 @@ package main
 
 import "github.com/mitchellh/cli"
 
-type ListCommand struct{}
+type ListCommand struct {
+	ui UI
+}
 
 func (l *ListCommand) Help() string {
 	return "Usage: star list"
@@ -17,5 +19,5 @@ func (l *ListCommand) Synopsis() string {
 }
 
 func newListCommand() (cli.Command, error) {
-	return &ListCommand{}, nil
+	return &ListCommand{ui: ui}, nil
 }

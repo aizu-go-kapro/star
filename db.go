@@ -4,19 +4,51 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/zchee/go-xdgbasedir"
 )
 
-var once sync.Once
-var repo *Repository
+var (
+	once sync.Once
+	repo *Repository
+)
 
-func Init() {
+var (
+	defaultDBPath = filepath.Join(xdgbasedir.ConfigHome(), "star", "db.json")
+	dbPath        string
+	dbInitialized bool
+)
+
+func InitDB(dbPathArg string) {
 	once.Do(func() {
+		dbInitialized = true
+
+		switch {
+		case dbPathArg != "":
+			dbPath = dbPathArg
+		case os.Getenv("STAR_JSON_DB_PATH") != "":
+			dbPath = os.Getenv("STAR_JSON_DB_PATH")
+		default:
+			dbPath = defaultDBPath
+		}
+
+		if _, err := os.Stat(filepath.Dir(dbPath)); os.IsNotExist(err) {
+			if err := os.MkdirAll(filepath.Dir(defaultDBPath), 0755); err != nil {
+				panic(err)
+			}
+		}
+
+		if verbose {
+			fmt.Fprintf(os.Stderr, "db path: %s\n", dbPath)
+		}
+
 		var err error
 		repo, err = NewRepository()
 		if err != nil {
@@ -68,7 +100,7 @@ func (j *jsonBookmarkRepository) Add(ctx context.Context, b *Bookmark) error {
 	if ok {
 		return errors.New("Already exist bookmark name")
 	}
-	return nil
+	return j.save(ctx)
 }
 
 func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
@@ -79,6 +111,22 @@ func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
 	if !ok {
 		return errors.New("failed to find the bookmark specified by passed key")
+	}
+	return nil
+}
+
+func (j *jsonBookmarkRepository) save(_ context.Context) error {
+	// TODO: backup
+	f, err := os.Create(dbPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to re-open JSON database (%s)", dbPath)
+	}
+	defer f.Close()
+
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(&DB{Bookmarks: j.slice()}); err != nil {
+		return errors.Wrap(err, "failed to encode JSON database")
 	}
 	return nil
 }
@@ -105,21 +153,35 @@ func (j *jsonBookmarkRepository) slice() []*Bookmark {
 }
 
 func NewRepository() (*Repository, error) {
+	if !dbInitialized {
+		panic("need to call InitDB before call NewRepository")
+	}
 	return newJSONRepository()
 }
 
-// TODO (@ktr0731)
-// by tenntenn これはテスト用？ ファイル名が固定なのが気になる。
-// テスト用ならばtestdata以下に移動したほうがいい。
 func newJSONRepository() (*Repository, error) {
-	f, err := os.Open("in.json")
+	_, err := os.Stat(dbPath)
+	if os.IsNotExist(err) {
+		return &Repository{
+			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
+		}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(dbPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load JSON database")
 	}
 	defer f.Close()
 
 	var db DB
-	if err := json.NewDecoder(f).Decode(&db); err != nil {
+	if err := json.NewDecoder(f).Decode(&db); err == io.EOF {
+		return &Repository{
+			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
+		}, nil
+	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to decode JSON database")
 	}
 
