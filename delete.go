@@ -1,6 +1,13 @@
 package main
 
-import "github.com/mitchellh/cli"
+import (
+	"context"
+	"fmt"
+
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/mitchellh/cli"
+	"github.com/pkg/errors"
+)
 
 type DeleteCommand struct {
 	ui UI
@@ -11,7 +18,17 @@ func (d *DeleteCommand) Help() string {
 }
 
 func (d *DeleteCommand) Run(args []string) int {
-	panic("not implemented")
+	var result error
+	for _, name := range args {
+		if err := repo.Bookmark.Delete(context.Background(), &Bookmark{Name: name}); err != nil {
+			result = multierror.Append(result, errors.Wrapf(err, "no such bookmark: %s", name))
+		}
+	}
+	if result != nil {
+		d.ui.ErrPrintln(fmt.Sprintf("failed to delete some bookmarks: %s", result))
+		return 1
+	}
+	return 0
 }
 
 func (d *DeleteCommand) Synopsis() string {
