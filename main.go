@@ -18,6 +18,7 @@ func main() {
 	var (
 		dbPath string
 	)
+	// TODO: fix help text
 	flag.StringVar(&dbPath, "path", "", "JSON database path")
 	flag.BoolVar(&verbose, "V", false, "verbose mode")
 	flag.Parse()
