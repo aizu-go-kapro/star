@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	"github.com/zchee/go-xdgbasedir"
 )
@@ -26,12 +27,6 @@ var (
 
 func InitDB(dbPathArg string) {
 	once.Do(func() {
-		var err error
-		repo, err = NewRepository()
-		if err != nil {
-			panic(err)
-		}
-
 		switch {
 		case dbPathArg != "":
 			dbPath = dbPathArg
@@ -51,6 +46,11 @@ func InitDB(dbPathArg string) {
 			fmt.Fprintf(os.Stderr, "db path: %s\n", dbPath)
 		}
 
+		var err error
+		repo, err = NewRepository()
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 
@@ -159,6 +159,7 @@ func NewRepository() (*Repository, error) {
 func newJSONRepository() (*Repository, error) {
 	_, err := os.Stat(dbPath)
 	if os.IsNotExist(err) {
+		pp.Println(err, dbPath)
 		return &Repository{
 			Bookmark: &jsonBookmarkRepository{bookmarks: sync.Map{}},
 		}, nil
