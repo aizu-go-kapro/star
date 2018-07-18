@@ -28,6 +28,7 @@ func (o *OpenCommand) Run(args []string) int {
 		b, err := repo.Bookmark.Get(context.Background(), name)
 		if err != nil {
 			result = multierror.Append(result, errors.Wrapf(err, "no such bookmark: %s", name))
+			continue
 		}
 		if err := open.Run(b.URL); err != nil {
 			o.ui.ErrPrintln("failed to open browser: %s", err)
