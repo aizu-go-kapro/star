@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/mitchellh/cli"
 )
@@ -21,7 +22,14 @@ func (u *UpdateCommand) Run(args []string) int {
 		return 1
 	}
 
-	if err := repo.Bookmark.Update(context.Background(), &Bookmark{Name: args[1], URL: args[0]}); err != nil {
+	uri, name := args[0], args[1]
+
+	if _, err := url.ParseRequestURI(uri); err != nil {
+		u.ui.ErrPrintln(err)
+		return 1
+	}
+
+	if err := repo.Bookmark.Update(context.Background(), &Bookmark{Name: name, URL: uri}); err != nil {
 		u.ui.ErrPrintln(fmt.Sprintf("failed to update the bookmark: %s", err))
 		return 1
 	}
