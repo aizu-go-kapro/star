@@ -74,6 +74,7 @@ type Repository struct {
 type BookmarkRepository interface {
 	Add(context.Context, *Bookmark) error
 	List(context.Context) ([]*Bookmark, error)
+	Get(context.Context, string) (*Bookmark, error)
 	Update(context.Context, *Bookmark) error
 	Delete(context.Context, *Bookmark) error
 }
@@ -107,8 +108,16 @@ func (j *jsonBookmarkRepository) List(_ context.Context) ([]*Bookmark, error) {
 	return j.slice(), nil
 }
 
-func (j *jsonBookmarkRepository) Update(ctx context.Context, b *Bookmark) error {
-	_, ok := j.bookmarks.Load(b.Name)
+func (j *jsonBookmarkRepository) Get(ctx context.Context, name string) (*Bookmark, error) {
+	v, ok := j.bookmarks.Load(name)
+	if !ok {
+		return nil, errors.Errorf("no such bookmark: %s", name)
+	}
+	return v.(*Bookmark), nil
+}
+
+func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
+	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
 	if !ok {
 		return errors.New("failed to find the bookmark specified by passed key")
 	}
