@@ -121,7 +121,9 @@ func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
 	if !ok {
 		return errors.New("failed to find the bookmark specified by passed key")
 	}
-	return nil
+	b.CreatedAt = time.Now()
+	j.bookmarks.Store(b.Name, b)
+	return j.save(ctx)
 }
 
 func (j *jsonBookmarkRepository) save(_ context.Context) error {
