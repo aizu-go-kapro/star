@@ -116,7 +116,7 @@ func (j *jsonBookmarkRepository) Get(ctx context.Context, name string) (*Bookmar
 	return v.(*Bookmark), nil
 }
 
-func (j *jsonBookmarkRepository) Update(_ context.Context, b *Bookmark) error {
+func (j *jsonBookmarkRepository) Update(ctx context.Context, b *Bookmark) error {
 	_, ok := j.bookmarks.LoadOrStore(b.Name, b)
 	if !ok {
 		return errors.New("failed to find the bookmark specified by passed key")
