@@ -38,3 +38,13 @@ $ star list | awk '{ print $1 }' | xargs star open
 # open bookmarks with fuzzy finder
 $ star open -f
 ```
+
+## contributors
+- [ktr0731](https://github.com/ktr0731)  
+- [slme9364](https://github.com/slme9364)  
+- [ryu1998tea](https://github.com/ryu1998tea)  
+- [Ryusei1026](https://github.com/Ryusei1026)  
+- [tenntenn](https://github.com/tenntenn)(code review)  
+
+## LICENSE
+MIT 
